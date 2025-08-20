@@ -28,7 +28,7 @@ from decalib.datasets import datasets
 from decalib.utils import util
 from decalib.utils.config import cfg as deca_cfg
 from decalib.utils.tensor_cropper import transform_points
-from decailb.utils.face_alignment import recreate_aligned_images
+from decalib.utils.face_alignment import recreate_aligned_images
 
 ##### check the gcc version and modify utils/renderer.py
 
@@ -111,7 +111,7 @@ def main(args):
             predicted_landmark[...,1] = predicted_landmark[...,1]*image.shape[0]/2 + image.shape[0]/2
             
             # realign and crop
-            recreate_aligned_images(name, os.path.join(inputpath, name+'.png'), dst_subdir, predicted_landmark)
+            recreate_aligned_images(name, os.path.join(inputpath, name+'.png'), dst_subdir, predicted_landmark, output_size=args.sample_size)
             
     print(f'-- please check the results in {savefolder}')
         
@@ -131,6 +131,8 @@ if __name__ == '__main__':
                         help='sample images from video data for every step' )
     parser.add_argument('--detector', default='fan', type=str,
                         help='detector for cropping face, check decalib/detectors.py for details' )
+    parser.add_argument('--sample_size', default=224, type=int,
+                        help='output size for aligned/cropped images')
     # rendering option
     parser.add_argument('--rasterizer_type', default='pytorch3d', type=str,
                         help='rasterizer type: pytorch3d or standard' )
