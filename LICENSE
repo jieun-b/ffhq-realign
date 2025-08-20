@@ -1,8 +1,8 @@
-This repository is a customized version of DECA (https://github.com/yfeng95/DECA).
+This repository is an adaptation of [DECA](https://github.com/yfeng95/DECA),
+modified to provide preprocessing code for face realignment on the FFHQ dataset.
 
-The original DECA license (below) applies to all files derived from DECA.
-Additional modifications in this repository are © 2025 jieun-b,
-and are distributed under the same non-commercial license terms.
+The original DECA license (included below) applies to all files derived from DECA.  
+Additional modifications in this repository are © 2025 jieun-b and are released under the same non-commercial license terms.
 
 -----------------------------
 License
