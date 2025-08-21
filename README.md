@@ -22,10 +22,6 @@ producing a more consistent alignment of unconstrained face images.
   ```bash
   pip install -r requirements.txt
   ```
-  Or use virtual environment by runing 
-  ```bash
-  bash install_conda.sh
-  ```
   For visualization, we use our rasterizer that uses pytorch JIT Compiling Extensions. If there occurs a compiling error, you can install [pytorch3d](https://github.com/facebookresearch/pytorch3d/blob/master/INSTALL.md) instead and set --rasterizer_type=pytorch3d when running the preprocessing script.
 
 
