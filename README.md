@@ -25,21 +25,37 @@ producing a more consistent alignment of unconstrained face images.
   For visualization, we use our rasterizer that uses pytorch JIT Compiling Extensions. If there occurs a compiling error, you can install [pytorch3d](https://github.com/facebookresearch/pytorch3d/blob/master/INSTALL.md) instead and set --rasterizer_type=pytorch3d when running the preprocessing script.
 
 
+## Data Preparation
+
+Before you continue, you must register at [FLAME](https://flame.is.tue.mpg.de/) and agree to the license.
+
+### 1. Download FLAME data
+```bash
+mkdir -p ./data
+
+# Enter your FLAME username/password
+USERNAME="<your_username>"
+PASSWORD="<your_password>"
+
+wget --post-data "username=$USERNAME&password=$PASSWORD" \
+  "https://download.is.tue.mpg.de/download.php?domain=flame&sfile=FLAME2020.zip&resume=1" \
+  -O ./data/FLAME2020.zip --no-check-certificate --continue
+
+unzip -o ./data/FLAME2020.zip -d ./data/FLAME2020
+mv ./data/FLAME2020/generic_model.pkl ./data
+```
+
+### 2. Download DECA model
+```bash
+pip install gdown
+gdown 1rp8kdyLPvErw2dTmqtjISRVvQLj6Yzje -O ./data/deca_model.tar
+```
+
+
 ## Usage
-
-1. Prepare data   
-    run script: 
-    ```bash
-    bash fetch_data.sh
-    ```
-    <!-- or manually download data form [FLAME 2020 model](https://flame.is.tue.mpg.de/download.php) and [DECA trained model](https://drive.google.com/file/d/1rp8kdyLPvErw2dTmqtjISRVvQLj6Yzje/view?usp=sharing), and put them in ./data  -->  
-    (Optional for Albedo)   
-    follow the instructions for the [Albedo model](https://github.com/TimoBolkart/BFM_to_FLAME) to get 'FLAME_albedo_from_BFM.npz', put it into ./data
-
-2. Run preprocessing
-    ```bash
-    python preprocess_ffhq.py -i ffhq/in-the-wild-images -s ffhq/realigned --sample_size 512
-    ``` 
+```bash
+python preprocess_ffhq.py -i ffhq/in-the-wild-images -s ffhq/realigned --sample_size 1024
+``` 
 
 
 ## License
