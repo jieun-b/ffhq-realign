@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-i', '--inputpath', default='ffhq/in-the-wild-images', type=str,
                         help='path to the test data directory')
-    parser.add_argument('-s', '--savefolder', default='ffhq/results', type=str,
+    parser.add_argument('-s', '--savefolder', default='ffhq/realign', type=str,
                         help='path to the output directory')
     parser.add_argument('--device', default='cuda', type=str,
                         help='set device, cpu for using cpu' )
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     parser.add_argument('--sample_size', default=224, type=int,
                         help='output size for aligned/cropped images')
     # rendering option
-    parser.add_argument('--rasterizer_type', default='pytorch3d', type=str,
+    parser.add_argument('--rasterizer_type', default='standard', type=str,
                         help='rasterizer type: pytorch3d or standard' )
     # save
     parser.add_argument('--useTex', default=False, type=lambda x: x.lower() in ['true', '1'],
