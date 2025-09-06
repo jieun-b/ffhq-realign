@@ -157,11 +157,11 @@ class DECA(nn.Module):
         return codedict
 
     # @torch.no_grad()
-    def decode(self, codedict, rendering=True, iddict=None, vis_lmk=True, return_vis=True, use_detail=True,
+    def decode(self, codedict, rendering=True, iddict=None, vis_lmk=True, return_vis=False, use_detail=True,
                 render_orig=False, original_image=None, tform=None):
         images = codedict['images']
         batch_size = images.shape[0]
-        
+            
         ## decode
         verts, landmarks2d, landmarks3d = self.flame(shape_params=codedict['shape'], expression_params=codedict['exp'], pose_params=codedict['pose'])
         if self.cfg.model.use_tex:
@@ -181,52 +181,53 @@ class DECA(nn.Module):
             'landmarks3d': landmarks3d,
             'landmarks3d_world': landmarks3d_world,
         }
-
+        
         ## rendering
-        if return_vis and render_orig and original_image is not None and tform is not None:
+        if render_orig and original_image is not None:
             points_scale = [self.image_size, self.image_size]
             _, _, h, w = original_image.shape
             # import ipdb; ipdb.set_trace()
             trans_verts = transform_points(trans_verts, tform, points_scale, [h, w])
             landmarks2d = transform_points(landmarks2d, tform, points_scale, [h, w])
             landmarks3d = transform_points(landmarks3d, tform, points_scale, [h, w])
+            opdict['landmarks2d'] = landmarks2d
+            opdict['landmarks3d'] = landmarks3d
             background = original_image
             images = original_image
         else:
             h, w = self.image_size, self.image_size
             background = None
 
-        if rendering:
-            # ops = self.render(verts, trans_verts, albedo, codedict['light'])
-            ops = self.render(verts, trans_verts, albedo, h=h, w=w, background=background)
-            ## output
-            opdict['grid'] = ops['grid']
-            opdict['rendered_images'] = ops['images']
-            opdict['alpha_images'] = ops['alpha_images']
-            opdict['normal_images'] = ops['normal_images']
-        
-        if self.cfg.model.use_tex:
-            opdict['albedo'] = albedo
-            
-        if use_detail:
-            uv_z = self.D_detail(torch.cat([codedict['pose'][:,3:], codedict['exp'], codedict['detail']], dim=1))
-            if iddict is not None:
-                uv_z = self.D_detail(torch.cat([iddict['pose'][:,3:], iddict['exp'], codedict['detail']], dim=1))
-            uv_detail_normals = self.displacement2normal(uv_z, verts, ops['normals'])
-            uv_shading = self.render.add_SHlight(uv_detail_normals, codedict['light'])
-            uv_texture = albedo*uv_shading
-
-            opdict['uv_texture'] = uv_texture 
-            opdict['normals'] = ops['normals']
-            opdict['uv_detail_normals'] = uv_detail_normals
-            opdict['displacement_map'] = uv_z+self.fixed_uv_dis[None,None,:,:]
-        
-        if vis_lmk:
-            landmarks3d_vis = self.visofp(ops['transformed_normals'])#/self.image_size
-            landmarks3d = torch.cat([landmarks3d, landmarks3d_vis], dim=2)
-            opdict['landmarks3d'] = landmarks3d
-
         if return_vis:
+            if rendering:
+                # ops = self.render(verts, trans_verts, albedo, codedict['light'])
+                ops = self.render(verts, trans_verts, albedo, h=h, w=w, background=background)
+                ## output
+                opdict['grid'] = ops['grid']
+                opdict['rendered_images'] = ops['images']
+                opdict['alpha_images'] = ops['alpha_images']
+                opdict['normal_images'] = ops['normal_images']
+            
+            if self.cfg.model.use_tex:
+                opdict['albedo'] = albedo
+                
+            if use_detail:
+                uv_z = self.D_detail(torch.cat([codedict['pose'][:,3:], codedict['exp'], codedict['detail']], dim=1))
+                if iddict is not None:
+                    uv_z = self.D_detail(torch.cat([iddict['pose'][:,3:], iddict['exp'], codedict['detail']], dim=1))
+                uv_detail_normals = self.displacement2normal(uv_z, verts, ops['normals'])
+                uv_shading = self.render.add_SHlight(uv_detail_normals, codedict['light'])
+                uv_texture = albedo*uv_shading
+
+                opdict['uv_texture'] = uv_texture 
+                opdict['normals'] = ops['normals']
+                opdict['uv_detail_normals'] = uv_detail_normals
+                opdict['displacement_map'] = uv_z+self.fixed_uv_dis[None,None,:,:]
+            
+            if vis_lmk:
+                landmarks3d_vis = self.visofp(ops['transformed_normals'])#/self.image_size
+                landmarks3d = torch.cat([landmarks3d, landmarks3d_vis], dim=2)
+        
             ## render shape
             shape_images, _, grid, alpha_images = self.render.render_shape(verts, trans_verts, h=h, w=w, images=background, return_grid=True)
             detail_normal_images = F.grid_sample(uv_detail_normals, grid, align_corners=False)*alpha_images

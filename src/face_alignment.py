@@ -1,8 +1,10 @@
 import os
 import numpy as np
 import PIL.Image
+import scipy.ndimage
 
-def recreate_aligned_images(name, src, dst, face_landmarks, output_size=1024, transform_size=4096, enable_padding=True, rotate_level=True):
+
+def recreate_aligned_images(name, image, face_landmarks, output_size=1024, transform_size=4096, enable_padding=True, rotate_level=True):
     # Align function from FFHQ dataset pre-processing step
     # https://github.com/NVlabs/ffhq-dataset/blob/master/download_ffhq.py
     lm = np.array(face_landmarks)
@@ -40,7 +42,7 @@ def recreate_aligned_images(name, src, dst, face_landmarks, output_size=1024, tr
         c0 = eye_avg + eye_to_mouth * 0.1
 
     # Load in-the-wild image.
-    img = PIL.Image.open(src)
+    img = PIL.Image.open(image)
     
     quad = np.stack([c0 - x - y, c0 - x + y, c0 + x + y, c0 + x - y])
     qsize = np.hypot(*x) * 2
@@ -49,7 +51,7 @@ def recreate_aligned_images(name, src, dst, face_landmarks, output_size=1024, tr
     shrink = int(np.floor(qsize / output_size * 0.5))
     if shrink > 1:
         rsize = (int(np.rint(float(img.size[0]) / shrink)), int(np.rint(float(img.size[1]) / shrink)))
-        img = img.resize(rsize, PIL.Image.ANTIALIAS)
+        img = img.resize(rsize, PIL.Image.Resampling.LANCZOS)
         quad /= shrink
         qsize /= shrink
 
@@ -79,9 +81,6 @@ def recreate_aligned_images(name, src, dst, face_landmarks, output_size=1024, tr
     # Transform.
     img = img.transform((transform_size, transform_size), PIL.Image.QUAD, (quad + 0.5).flatten(), PIL.Image.BILINEAR)
     if output_size < transform_size:
-        img = img.resize((output_size, output_size), PIL.Image.ANTIALIAS)
+        img = img.resize((output_size, output_size), PIL.Image.Resampling.LANCZOS)
 
-
-    # Save aligned image.
-    img.save(os.path.join(dst, name+'.png'), 'png')
-    
+    return img

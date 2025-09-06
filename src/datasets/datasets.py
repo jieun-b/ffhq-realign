@@ -13,19 +13,17 @@
 # For comments or questions, please email us at deca@tue.mpg.de
 # For commercial licensing contact, please contact ps-license@tuebingen.mpg.de
 
-import os, sys
-import torch
-from torch.utils.data import Dataset, DataLoader
-import torchvision.transforms as transforms
-import numpy as np
+import os
 import cv2
-import scipy
-from skimage.io import imread, imsave
-from skimage.transform import estimate_transform, warp, resize, rescale
+import json
+import torch
+import numpy as np
+from torch.utils.data import Dataset
+from skimage.io import imread
+from skimage.transform import estimate_transform, warp
 from glob import glob
-import scipy.io
 
-from . import detectors
+from .detector import MediaPipe
 
 def video2sequence(video_path, sample_step=10):
     videofolder = os.path.splitext(video_path)[0]
@@ -46,7 +44,7 @@ def video2sequence(video_path, sample_step=10):
     return imagepath_list
 
 class TestData(Dataset):
-    def __init__(self, testpath, iscrop=True, crop_size=224, scale=1.25, face_detector='fan', sample_step=10):
+    def __init__(self, testpath, iscrop=True, crop_size=224, scale=1.25, face_detector='mediapipe', sample_step=10, json_path=None):
         '''
             testpath: folder, imagepath_list, image path, video path
         '''
@@ -67,10 +65,19 @@ class TestData(Dataset):
         self.scale = scale
         self.iscrop = iscrop
         self.resolution_inp = crop_size
-        if face_detector == 'fan':
-            self.face_detector = detectors.FAN()
-        # elif face_detector == 'mtcnn':
-        #     self.face_detector = detectors.MTCNN()
+        
+        self.annotation_dict = {}
+        if json_path is not None and os.path.exists(json_path):
+            with open(json_path, "r") as f:
+                annotation = json.load(f)
+            self.annotation_dict = {
+                str(k).zfill(5): v["in_the_wild"]["face_landmarks"]
+                for k, v in annotation.items()
+                if "in_the_wild" in v and "face_landmarks" in v["in_the_wild"]
+            }
+
+        if face_detector == 'mediapipe':
+            self.face_detector = MediaPipe()
         else:
             print(f'please check the detector: {face_detector}')
             exit()
@@ -102,27 +109,20 @@ class TestData(Dataset):
 
         h, w, _ = image.shape
         if self.iscrop:
-            # provide kpt as txt file, or mat file (for AFLW2000)
-            kpt_matpath = os.path.splitext(imagepath)[0]+'.mat'
-            kpt_txtpath = os.path.splitext(imagepath)[0]+'.txt'
-            if os.path.exists(kpt_matpath):
-                kpt = scipy.io.loadmat(kpt_matpath)['pt3d_68'].T        
-                left = np.min(kpt[:,0]); right = np.max(kpt[:,0]); 
-                top = np.min(kpt[:,1]); bottom = np.max(kpt[:,1])
-                old_size, center = self.bbox2point(left, right, top, bottom, type='kpt68')
-            elif os.path.exists(kpt_txtpath):
-                kpt = np.loadtxt(kpt_txtpath)
-                left = np.min(kpt[:,0]); right = np.max(kpt[:,0]); 
-                top = np.min(kpt[:,1]); bottom = np.max(kpt[:,1])
+            if imagename in self.annotation_dict:
+                kpt = np.array(self.annotation_dict[imagename])  # (68, 2)
+                left, right = np.min(kpt[:,0]), np.max(kpt[:,0])
+                top, bottom = np.min(kpt[:,1]), np.max(kpt[:,1])
                 old_size, center = self.bbox2point(left, right, top, bottom, type='kpt68')
             else:
+                # fallback: mediapipe
+                print(f"[INFO] using mediapipe for face detection: {imagename}")
                 bbox, bbox_type = self.face_detector.run(image)
                 if len(bbox) < 4:
-                    print('no face detected! run original image')
-                    left = 0; right = h-1; top=0; bottom=w-1
-                else:
-                    left = bbox[0]; right=bbox[2]
-                    top = bbox[1]; bottom=bbox[3]
+                    print(f"[SKIP] no face detected in {imagepath}")
+                    return None
+                left, right = bbox[0], bbox[2]
+                top, bottom = bbox[1], bbox[3]
                 old_size, center = self.bbox2point(left, right, top, bottom, type=bbox_type)
             size = int(old_size*self.scale)
             src_pts = np.array([[center[0]-size/2, center[1]-size/2], [center[0] - size/2, center[1]+size/2], [center[0]+size/2, center[1]-size/2]])
@@ -133,9 +133,22 @@ class TestData(Dataset):
         tform = estimate_transform('similarity', src_pts, DST_PTS)
         
         image = image/255.
-
         dst_image = warp(image, tform.inverse, output_shape=(self.resolution_inp, self.resolution_inp))
         dst_image = dst_image.transpose(2,0,1)
+        
+        # if imagename in self.annotation_dict:
+        #     kpt = np.array(self.annotation_dict[imagename])  # (68, 2)
+
+        #     debug_img = (image * 255).astype(np.uint8).copy()  # 원본 스케일 복원
+        #     for (x, y) in kpt.astype(np.int32):
+        #         cv2.circle(debug_img, (x, y), 2, (0, 255, 0), -1)
+
+        #     os.makedirs("debug_outputs", exist_ok=True)
+        #     cv2.imwrite(
+        #         os.path.join("debug_outputs", f"{imagename}_orig_landmarks.png"),
+        #         cv2.cvtColor(debug_img, cv2.COLOR_RGB2BGR)
+        #     )
+        
         return {'image': torch.tensor(dst_image).float(),
                 'imagename': imagename,
                 'tform': torch.tensor(tform.params).float(),

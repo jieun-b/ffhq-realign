@@ -1,4 +1,4 @@
-# FFHQ-Realign
+# FFHQ Realign
 
 This repository provides **a preprocessing pipeline for the [FFHQ dataset](https://github.com/NVlabs/ffhq-dataset)**,  
 where **face realignment** is applied to improve the consistency of in-the-wild images.  
@@ -15,21 +15,64 @@ producing a more consistent alignment of unconstrained face images.
 
 ## Installation
 
-* Python 3.7 (numpy, skimage, scipy, opencv)  
-* PyTorch >= 1.6 (pytorch3d)  
-* face-alignment (Optional for detecting face)  
-  You can run 
-  ```bash
-  pip install -r requirements.txt
-  ```
-  For visualization, we use our rasterizer that uses pytorch JIT Compiling Extensions. If there occurs a compiling error, you can install [pytorch3d](https://github.com/facebookresearch/pytorch3d/blob/master/INSTALL.md) instead and set --rasterizer_type=pytorch3d when running the preprocessing script.
+### Build environment
 
+```bash
+conda create -n ffhq-realign python=3.9
+conda activate ffhq-realign
+```
+
+This project uses **PyTorch 2.4.1** (with `torchvision==0.19.1`, `torchaudio==2.4.1`).
+
+Please install the appropriate version for your system (CPU or CUDA) following the [official PyTorch instructions](https://pytorch.org/get-started/previous-versions/).
+
+Example (CUDA 12.1):
+
+```bash
+conda install pytorch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 pytorch-cuda=12.1 -c pytorch -c nvidia
+```
+
+Note: If you have a custom CUDA install, you may need to export:
+
+```bash
+export CUDA_HOME=/usr/local/cuda-12.1
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+```
+
+Install the remaining dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Additional required packages:
+
+```bash
+# Pytorch3D (for 3D-related modules and as fallback rasterizer with --rasterizer_type=pytorch3d)
+pip install "git+https://github.com/facebookresearch/pytorch3d.git@stable"
+# Chumpy (SMPL / DECA dependencies, works well with Python 3.9)
+pip install git+https://github.com/mattloper/chumpy.git
+```
 
 ## Data Preparation
 
+### 1. Download FFHQ dataset
+
+Please download the official [FFHQ dataset](https://github.com/NVlabs/ffhq-dataset) and organize it as follows:
+
+```bash
+ffhq/
+├── in-the-wild-images/
+└── ffhq-dataset-v2.json
+```
+
+If `in-the-wild-images` contains subfolders, first flatten it so that all images are directly under `in-the-wild-images/`, then run `prepare_ffhq_json.py`.
+
+
+### 2. Download FLAME data
 Before you continue, you must register at [FLAME](https://flame.is.tue.mpg.de/) and agree to the license.
 
-### 1. Download FLAME data
 ```bash
 mkdir -p ./data
 
@@ -45,7 +88,7 @@ unzip -o ./data/FLAME2020.zip -d ./data/FLAME2020
 mv ./data/FLAME2020/generic_model.pkl ./data
 ```
 
-### 2. Download DECA model
+### 3. Download DECA model
 ```bash
 pip install gdown
 gdown 1rp8kdyLPvErw2dTmqtjISRVvQLj6Yzje -O ./data/deca_model.tar
@@ -54,7 +97,7 @@ gdown 1rp8kdyLPvErw2dTmqtjISRVvQLj6Yzje -O ./data/deca_model.tar
 
 ## Usage
 ```bash
-python preprocess_ffhq.py -i ffhq/in-the-wild-images -s ffhq/realigned --sample_size 1024
+python preprocess_ffhq.py --sample_size 1024
 ``` 
 
 
