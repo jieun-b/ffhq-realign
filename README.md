@@ -113,7 +113,7 @@ python preprocess_ffhq.py --sample_size 1024
 
 ### Qualitative Analysis
 - **Mean Face Comparison**
-  ![mean_face](asset/mean_face.png)
+  <img src="asset/mean_face.png" width="600"/>
 
 - **Cropped Samples**
   ![compare_00030](asset/compare_00030.png)
