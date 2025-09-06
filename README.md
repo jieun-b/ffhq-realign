@@ -112,9 +112,11 @@ Our preprocessing improves both scale consistency and landmark stability:
 | **Landmark Variance** (Jaw)          | 0.0098   | 0.0091       |
 
 Mean face comparison shows improved alignment:
-<img src="asset/mean_face.png" width="500"/>
+
+![mean_face](asset/mean_face.png)
 
 Cropped examples show more consistent regions:
+
 ![compare_00030](asset/compare_00030.png)
 ![compare_08323](asset/compare_08323.png)
 
