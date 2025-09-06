@@ -75,36 +75,6 @@ def landmark_variance(lm_norm, region_idx):
     region = lm_norm[:, region_idx, :]
     return np.mean(np.var(region, axis=0))
 
-def save_barplots(o_area_std, p_area_std, o_mouth_var, p_mouth_var, o_jaw_var, p_jaw_var, out_dir):
-    plt.figure(figsize=(12,5))
-
-    # Scale Consistency (bbox ratio std)
-    plt.subplot(1, 2, 1)
-    plt.bar(["Original FFHQ", "Realigned FFHQ"], 
-            [o_area_std, p_area_std], 
-            color=["#1f77b4","#ff7f0e"])
-    plt.title("Scale Consistency")
-    plt.ylabel("Std of BBox Area Ratio")
-
-    # Landmark Variance (Mouth & Jaw)
-    plt.subplot(1, 2, 2)
-    x = np.arange(2)
-    width = 0.35
-    plt.bar(x - width/2, [o_mouth_var, o_jaw_var], width, 
-            label="Original FFHQ", color="#1f77b4")
-    plt.bar(x + width/2, [p_mouth_var, p_jaw_var], width, 
-            label="Realigned FFHQ", color="#ff7f0e")
-    plt.xticks(x, ["Mouth Region", "Jaw Region"])
-    plt.title("Landmark Variance (Normalized Coordinates)")
-    plt.ylabel("Variance")
-    plt.legend()
-
-    plt.tight_layout()
-    path = os.path.join(out_dir, "metrics_barplot.png")
-    plt.savefig(path, dpi=200)
-    plt.close()
-    print(f"[INFO] Bar plots saved to {path}")
-    
     
 def main(args):
     os.makedirs(args.out_dir, exist_ok=True)
@@ -139,21 +109,21 @@ def main(args):
     o_jaw_var   = landmark_variance(o_lm, JAW)
     p_jaw_var   = landmark_variance(p_lm, JAW)
 
-    fig, axes = plt.subplots(1, 2, figsize=(8,4))
+    fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+
     axes[0].imshow(cv2.cvtColor(o_mean, cv2.COLOR_RGB2BGR))
-    axes[0].set_title("Original FFHQ")
     axes[0].axis("off")
 
     axes[1].imshow(cv2.cvtColor(p_mean, cv2.COLOR_RGB2BGR))
-    axes[1].set_title("Realigned FFHQ")
     axes[1].axis("off")
 
-    plt.tight_layout()
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0.02, hspace=0)
+
     path_comp = os.path.join(args.out_dir, "meanface_comparison.png")
-    plt.savefig(path_comp, dpi=200)
+    plt.savefig(path_comp, dpi=200, bbox_inches="tight", pad_inches=0)
     plt.close()
     print(f"[INFO] Mean face comparison saved to {path_comp}")
-
+    
     print("\n=== Results ===")
     print(f"Scale Consistency (bbox area ratio std):")
     print(f"  Original={o_area_std:.4f}, Preprocessed={p_area_std:.4f}")
@@ -161,8 +131,6 @@ def main(args):
     print(f"  Mouth: Original={o_mouth_var:.4f}, Preprocessed={p_mouth_var:.4f}")
     print(f"  Jaw:   Original={o_jaw_var:.4f}, Preprocessed={p_jaw_var:.4f}")
     print(f"\nMean faces saved to {args.out_dir} (visual reference only).")
-
-    save_barplots(o_area_std, p_area_std, o_mouth_var, p_mouth_var, o_jaw_var, p_jaw_var, args.out_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

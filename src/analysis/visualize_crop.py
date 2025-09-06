@@ -41,27 +41,23 @@ def save_pair(orig_file, prep_file, tag, score, out_dir, image_size=None, show_d
         img_prep = cv2.resize(img_prep, (image_size, image_size))
 
     panels = [img_orig, img_prep]
-    titles = ["Original FFHQ", "Realigned FFHQ"]
-
     if show_diff:
         diff = cv2.absdiff(img_orig, img_prep)
         diff = cv2.cvtColor(diff, cv2.COLOR_BGR2RGB)
         panels.append(diff)
-        titles.append("Difference Heatmap")
 
-    fig, axes = plt.subplots(1, len(panels), figsize=(4 * len(panels), 4))
+    fig, axes = plt.subplots(1, len(panels), figsize=(len(panels) * 4, 4))
     if len(panels) == 1:
         axes = [axes]
 
-    for ax, img, title in zip(axes, panels, titles):
+    for ax, img in zip(axes, panels):
         ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-        ax.set_title(title, fontsize=14, pad=15) 
         ax.axis("off")
 
-    plt.subplots_adjust(left=0.05, right=0.95, top=0.88, bottom=0.05, wspace=0.1)
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
 
     save_path = os.path.join(out_dir, f"{name}_{tag}.png")
-    plt.savefig(save_path, dpi=200)
+    plt.savefig(save_path, dpi=200, bbox_inches="tight", pad_inches=0)
     plt.close()
     print(f"[INFO] Saved {save_path} ({tag} score={score:.2f})")
 

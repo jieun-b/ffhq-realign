@@ -113,11 +113,9 @@ Our preprocessing improves both scale consistency and landmark stability:
 
 Representative examples:
 
-**Mean Face Comparison**  
-<br>
 <img src="asset/mean_face.png" width="500"/>
 
-**Example Comparisons**  
+ 
 ![compare_00030](asset/compare_00030.png)
 ![compare_08323](asset/compare_08323.png)
 
