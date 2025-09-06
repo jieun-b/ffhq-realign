@@ -103,7 +103,7 @@ python preprocess_ffhq.py --sample_size 1024
 
 ## Results
 
-### Quantitative Analysis
+Our preprocessing improves both scale consistency and landmark stability:
 
 | Metric                               | Original | Preprocessed |
 |--------------------------------------|----------|--------------|
@@ -111,13 +111,14 @@ python preprocess_ffhq.py --sample_size 1024
 | **Landmark Variance** (Mouth)        | 0.0084   | 0.0077       |
 | **Landmark Variance** (Jaw)          | 0.0098   | 0.0091       |
 
-### Qualitative Analysis
-- **Mean Face Comparison**
-  <img src="asset/mean_face.png" width="600"/>
+Representative examples:
 
-- **Cropped Samples**
-  ![compare_00030](asset/compare_00030.png)
-  ![compare_08323](asset/compare_08323.png)
+**Mean Face Comparison**  
+<img src="asset/mean_face.png" width="500"/>
+
+**Example Comparisons**  
+<img src="asset/compare_00030.png" width="800"/>
+<img src="asset/compare_08323.png" width="800"/>
 
 ## License
 
