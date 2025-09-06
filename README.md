@@ -112,15 +112,12 @@ python preprocess_ffhq.py --sample_size 1024
 | **Landmark Variance** (Jaw)          | 0.0098   | 0.0091       |
 
 ### Qualitative Analysis
+- **Mean Face Comparison**
+  ![mean_face](asset/mean_face.png)
 
-**Mean Face Comparison**  
-<img src="asset/mean_face.png" alt="mean_face" width="300"/>
-
-**Cropped Samples**  
-<p float="left">
-  <img src="asset/compare_00030.png" alt="compare_00030" width="250"/>
-  <img src="asset/compare_08323.png" alt="compare_08323" width="250"/>
-</p>
+- **Cropped Samples**
+  ![compare_00030](asset/compare_00030.png)
+  ![compare_08323](asset/compare_08323.png)
 
 ## License
 
