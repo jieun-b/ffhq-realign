@@ -7,11 +7,12 @@ It is built on top of the [DECA](https://github.com/yfeng95/DECA) framework,
 with the following main modifications:
 
 - `preprocess_ffhq.py`: restructured to function as a **dataset preprocessing script**.  
-- `decalib/utils/face_alignment.py`: a newly added module providing **face alignment utilities**.  
+- `src/face_alignment.py`: a newly added module providing **face alignment utilities**.  
 
 The goal of this project is to **re-estimate bounding boxes and re-crop images based on neutral facial landmarks**,  
 producing a more consistent alignment of unconstrained face images.
 
+![overview.png](asset/overview.png)
 
 ## Installation
 
@@ -67,7 +68,7 @@ ffhq/
 └── ffhq-dataset-v2.json
 ```
 
-If `in-the-wild-images` contains subfolders, first flatten it so that all images are directly under `in-the-wild-images/`, then run `prepare_ffhq_json.py`.
+If `in-the-wild-images` contains subfolders, flatten them so that all images are directly under `in-the-wild-images/`, then run `prepare_ffhq_json.py`.
 
 
 ### 2. Download FLAME data
@@ -100,6 +101,23 @@ gdown 1rp8kdyLPvErw2dTmqtjISRVvQLj6Yzje -O ./data/deca_model.tar
 python preprocess_ffhq.py --sample_size 1024
 ``` 
 
+## Results
+
+### Quantitative Analysis
+
+| Metric                               | Original | Preprocessed |
+|--------------------------------------|----------|--------------|
+| **Scale Consistency** (bbox area ratio std) | 0.0387   | 0.0358       |
+| **Landmark Variance** (Mouth)        | 0.0084   | 0.0077       |
+| **Landmark Variance** (Jaw)          | 0.0098   | 0.0091       |
+
+### Qualitative Analysis
+- **Mean Face Comparison**
+  ![mean_face](assets/mean_face.png)
+
+- **Cropped Samples**
+  ![compare_00030](assets/compare_00030.png)
+  ![compare_08323](assets/compare_08323.png)
 
 ## License
 
